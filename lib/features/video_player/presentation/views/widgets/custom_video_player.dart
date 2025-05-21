@@ -1,3 +1,4 @@
+// lib/features/video_player/presentation/views/widgets/custom_video_player.dart
 import 'package:better_player_plus/better_player_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,26 +25,47 @@ class CustomVideoPlayer extends StatefulWidget {
 }
 
 class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
-  CustomVideoPlayerCubit? _cubit;  // Cambiado a nullable
+  CustomVideoPlayerCubit? _cubit;
   bool _isInitialized = false;
   String? _lastVideoUrl;
+  bool _showThumbnail = true;
+  bool _showLoadingIndicator = false;
 
   @override
   void initState() {
     super.initState();
     _lastVideoUrl = widget.videoUrl;
-    // NO inicializar _cubit aquí - lo inicializamos en didChangeDependencies
+    
+    // Mostrar solo la miniatura al principio, sin indicador
+    _showThumbnail = true;
+    _showLoadingIndicator = false;
+    
+    // Esperar 1 segundo exacto antes de mostrar el indicador de carga si es necesario
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          // Después de 1 segundo, mostrar el indicador de carga si el video aún no está listo
+          if (_cubit != null) {
+            final state = _cubit!.state;
+            if (state is VideoLoading) {
+              _showLoadingIndicator = true;
+            } else if (state is VideoLoaded) {
+              // Si el video ya está cargado, ocultar la miniatura
+              _showThumbnail = false;
+            }
+          }
+        });
+      }
+    });
   }
   
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     
-    // Inicializar el cubit si aún no está inicializado
     if (_cubit == null) {
       _cubit = CustomVideoPlayerCubit(VideoPlayerCacheProvider.of(context));
       
-      // تحميل الفيديو الأولي
       if (!_isInitialized) {
         _loadVideo();
       }
@@ -51,17 +73,42 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   }
   
   void _loadVideo() {
-    // تحميل الفيديو فقط إذا تغير URL أو لم يتم التحميل بعد
     if (_lastVideoUrl != widget.videoUrl || !_isInitialized) {
       _lastVideoUrl = widget.videoUrl;
+      
+      // Reiniciar estados de visualización
+      setState(() {
+        _showThumbnail = true;
+        _showLoadingIndicator = false;
+      });
+      
+      // Cargar el video
       _cubit?.setupVideoPlayer(widget.videoUrl, widget.thumbnailUrl);
       
-      // تعيين معلومات الفيديوهات المجاورة
       if (widget.allVideos != null && widget.currentIndex != null) {
         _cubit?.setAdjacentVideos(widget.allVideos!, widget.currentIndex!);
       }
       
       _isInitialized = true;
+      
+      // Programar verificación después de 1 segundo exacto
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          setState(() {
+            // Verificar el estado actual después de 1 segundo
+            if (_cubit != null) {
+              final state = _cubit!.state;
+              if (state is VideoLoading) {
+                // Si todavía está cargando, mostrar el indicador
+                _showLoadingIndicator = true;
+              } else if (state is VideoLoaded) {
+                // Si ya terminó de cargar, ocultar miniatura
+                _showThumbnail = false;
+              }
+            }
+          });
+        }
+      });
     }
   }
 
@@ -69,13 +116,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   void didUpdateWidget(CustomVideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    // تحقق من تغير الفيديو
     if (oldWidget.videoUrl != widget.videoUrl) {
-      print('تغير عنوان الفيديو من ${oldWidget.videoUrl} إلى ${widget.videoUrl}');
       _loadVideo();
     }
     
-    // تحديث معلومات الفيديوهات المجاورة إذا تغير المؤشر
     if (widget.allVideos != null && 
         widget.currentIndex != null && 
         oldWidget.currentIndex != widget.currentIndex) {
@@ -92,195 +136,204 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
   @override
   Widget build(BuildContext context) {
     if (_cubit == null) {
-      return _buildLoadingPlaceholder();
+      return _buildThumbnailOnly();
     }
-    
-    // الحصول على حالة الكاش مباشرة
-    final cacheManager = VideoPlayerCacheProvider.of(context);
-    final isCached = cacheManager.getCacheStatus(widget.videoUrl) == CacheStatus.cached;
     
     return BlocBuilder<CustomVideoPlayerCubit, VideoState>(
       bloc: _cubit,
       builder: (context, state) {
-        // التحقق من أن حالة الفيديو المحمل تتطابق مع URL الحالي
         if (state is VideoLoaded && state.videoUrl != widget.videoUrl) {
-          // إذا كان الفيديو المحمل مختلفًا عن الفيديو المطلوب، نعيد التحميل
           Future.microtask(() => _loadVideo());
-          
-          // استخدام مؤشر مختلف للفيديوهات المخزنة
-          if (isCached) {
-            return _buildInstantPlayPlaceholder();
-          }
-          return _buildLoadingPlaceholder();
+          return _buildThumbnailOnly();
         }
         
-        // عرض الحالة المناسبة
         if (state is VideoLoaded) {
-          // عرض الفيديو مع مؤشر الكاش
           return Stack(
+            fit: StackFit.expand,
             children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: BetterPlayer(controller: state.betterPlayerController),
-              ),
-              // مؤشر الكاش
-              if (state.isCached)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(4),
+              // Video a pantalla completa (visible o no según _showThumbnail)
+              Visibility(
+                visible: !_showThumbnail,
+                maintainState: true,
+                child: Container(
+                  color: Colors.black,
+                  child: SizedBox.expand(
+                    child: Center(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                        margin: const EdgeInsets.symmetric(vertical: 0),
+                        child: BetterPlayer(controller: state.betterPlayerController),
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green, size: 12),
-                        SizedBox(width: 4),
-                        Text(
-                          'من الكاش',
-                          style: TextStyle(color: Colors.white, fontSize: 10),
-                        ),
-                      ],
+                  ),
+                ),
+              ),
+              
+              // Miniatura (se muestra durante 1 segundo o más si es necesario)
+              if (_showThumbnail)
+                Container(
+                  color: Colors.black,
+                  child: Image.network(
+                    widget.thumbnailUrl,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
+                ),
+              
+              // Indicador de carga (solo se muestra si el video sigue cargando después de 1 segundo)
+              if (_showThumbnail && _showLoadingIndicator)
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                ),
+              
+              // Listener para el cambio de estado (para ocultar miniatura cuando el video esté listo)
+              BlocListener<CustomVideoPlayerCubit, VideoState>(
+                bloc: _cubit,
+                listener: (context, state) {
+                  if (state is VideoLoaded) {
+                    // Esperar al menos 1 segundo antes de ocultar la miniatura
+                    Future.delayed(const Duration(seconds: 1), () {
+                      if (mounted) {
+                        setState(() {
+                          _showThumbnail = false;
+                          _showLoadingIndicator = false;
+                        });
+                      }
+                    });
+                  }
+                },
+                child: const SizedBox.shrink(), // Widget vacío, solo para escuchar cambios
+              ),
+            ],
+          );
+        } else if (state is VideoLoading) {
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Miniatura a pantalla completa
+              Container(
+                color: Colors.black,
+                child: Image.network(
+                  widget.thumbnailUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+              
+              // Indicador de carga (solo visible después de 1 segundo)
+              if (_showLoadingIndicator)
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
                 ),
             ],
           );
-        } else if (state is VideoLoading) {
-          // عرض حالة التحميل
-          return _buildLoadingPlaceholder();
         } else if (state is VideoError) {
-          // عرض حالة الخطأ
           return _buildErrorWidget(state.message);
         } else {
-          // حالة البدء - عرض مؤشر مختلف للفيديوهات المخزنة
-          if (isCached) {
-            return _buildInstantPlayPlaceholder();
-          }
-          return _buildLoadingPlaceholder();
+          return _buildThumbnailOnly();
         }
       },
     );
   }
 
-  // بناء مؤشر التحميل الأولي
+  // Widget que muestra solo la miniatura sin indicador de carga
+  Widget _buildThumbnailOnly() {
+    return Container(
+      color: Colors.black,
+      child: Image.network(
+        widget.thumbnailUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, __, ___) => Container(
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
+  // Widget para estado de carga con imagen e indicador opcional
   Widget _buildLoadingPlaceholder() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // صورة مصغرة كخلفية
-        Image.network(
-          widget.thumbnailUrl,
-          height: double.infinity,
-          width: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: Colors.black12,
-          ),
-        ),
-        // مؤشر التحميل
-        const CircularProgressIndicator(
-          color: Colors.white,
-        ),
-      ],
-    );
-  }
-
-  // مؤشر التشغيل الفوري للفيديوهات المخزنة
-  Widget _buildInstantPlayPlaceholder() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // الصورة المصغرة
-        Image.network(
-          widget.thumbnailUrl,
-          height: double.infinity,
-          width: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: Colors.black12,
-          ),
-        ),
-        // أيقونة التشغيل الفوري
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(50),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.play_arrow,
-                color: Colors.white,
-                size: 36,
-              ),
-              SizedBox(width: 4),
-              Icon(
-                Icons.flash_on,
-                color: Colors.green,
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-        // مؤشر التشغيل الفوري
-        Positioned(
-          bottom: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.cached,
-                  color: Colors.green,
-                  size: 14,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  'جاهز للتشغيل الفوري',
-                  style: TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // مؤشر الخطأ
-  Widget _buildErrorWidget(String message) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return Container(
+      color: Colors.black,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 40),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red),
+          // Miniatura a pantalla completa
+          Image.network(
+            widget.thumbnailUrl,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (_, __, ___) => Container(
+              color: Colors.black,
             ),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _loadVideo,
-            icon: const Icon(Icons.refresh),
-            label: const Text('إعادة المحاولة'),
-          ),
+          
+          // Indicador de carga (solo visible si _showLoadingIndicator es true)
+          if (_showLoadingIndicator)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(String message) {
+    return Container(
+      color: Colors.black,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 40),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: _loadVideo,
+              icon: const Icon(Icons.refresh),
+              label: const Text('إعادة المحاولة'),
+            ),
+          ],
+        ),
       ),
     );
   }
