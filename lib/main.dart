@@ -1,29 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-
-import 'package:path_provider/path_provider.dart';
-
 import 'package:reelsvtwo/features/video_player/presentation/manger/VideosCacheManager.dart';
 import 'package:reelsvtwo/features/video_player/presentation/views/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // إنشاء مدير الكاش
   final cacheManager = VideosCacheManager();
-
-  // إضافة مستمع لدورة حياة التطبيق
-  WidgetsBinding.instance.addObserver(AppLifecycleObserver(cacheManager));
-
-  // إنشاء مدير الكاش
-
-  // إضافة مستمع لدورة حياة التطبيق
   WidgetsBinding.instance.addObserver(AppLifecycleObserver(cacheManager));
 
   runApp(MyApp(cacheManager: cacheManager));
 }
 
-// مراقب دورة حياة التطبيق
 class AppLifecycleObserver extends WidgetsBindingObserver {
   final VideosCacheManager cacheManager;
 
@@ -31,13 +19,15 @@ class AppLifecycleObserver extends WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached) {
-      // تنظيف الكاش عند إغلاق التطبيق
-      cacheManager.clearCache();
-      cacheManager.dispose();
-    } else if (state == AppLifecycleState.paused) {
-      // يمكن تنفيذ بعض عمليات التنظيف للذاكرة عند تصغير التطبيق
-      DefaultCacheManager().emptyCache();
+    switch (state) {
+      case AppLifecycleState.detached:
+        cacheManager.clearCache();
+        break;
+      case AppLifecycleState.paused:
+        DefaultCacheManager().emptyCache();
+        break;
+      default:
+        break;
     }
   }
 }
