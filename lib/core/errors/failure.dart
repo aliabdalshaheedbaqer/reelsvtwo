@@ -1,7 +1,5 @@
 import 'package:dio/dio.dart';
 
-import 'package:muneer/core/api/end_ponits.dart';
-
 abstract class Failure {
   final String errMessage;
 
@@ -40,14 +38,11 @@ class ServerFailure extends Failure {
 
   factory ServerFailure.fromResponse(int statusCode, dynamic response) {
     if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
-      if (response is Map<String, dynamic> &&
-          response.containsKey(ApiKeys.errorMessage)) {
-        return ServerFailure(response[ApiKeys.message]);
-      }
       return ServerFailure('Authentication error, please login again');
     } else if (statusCode == 404) {
       return ServerFailure(
-          'Your request was not found, please try again later');
+        'Your request was not found, please try again later',
+      );
     } else if (statusCode == 500) {
       return ServerFailure('Internal server error, please try again later');
     } else {

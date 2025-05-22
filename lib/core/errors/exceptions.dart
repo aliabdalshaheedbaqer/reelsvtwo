@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import 'package:muneer/core/errors/error_model.dart';
+import 'package:reelsvtwo/core/errors/error_model.dart';
 
 class ServerException implements Exception {
   final ErrorModel errModel;
@@ -12,13 +12,10 @@ ServerException handleDioException(DioException e) {
   if (e.type == DioExceptionType.badResponse) {
     final response = e.response;
     if (response != null && response.data is Map<String, dynamic>) {
-      return ServerException(
-        errModel: ErrorModel.fromJson(response.data),
-      );
+      return ServerException(errModel: ErrorModel.fromJson(response.data));
     }
   }
-  
- 
+
   String errorMessage;
   switch (e.type) {
     case DioExceptionType.connectionTimeout:
@@ -40,14 +37,15 @@ ServerException handleDioException(DioException e) {
       errorMessage = 'Request to API server was cancelled';
       break;
     case DioExceptionType.unknown:
-      errorMessage = e.message?.contains('SocketException') ?? false
-          ? 'No internet connection'
-          : 'Unexpected error, please try again';
+      errorMessage =
+          e.message?.contains('SocketException') ?? false
+              ? 'No internet connection'
+              : 'Unexpected error, please try again';
       break;
     default:
       errorMessage = 'Something went wrong, please try again';
   }
-  
+
   return ServerException(
     errModel: ErrorModel(
       status: e.response?.statusCode ?? 500,
