@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../../../models/video_model.dart';
-import '../../../../../core/utils/styles.dart';
 
 class VideoThumbnail extends StatelessWidget {
   final VideoModel video;
@@ -81,14 +80,14 @@ class VideoThumbnail extends StatelessWidget {
                 children: [
                   Text(
                     video.title,
-                    style: AppStyles.styleSemiBold24(context),
+                    style: TextStyle(),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     video.description,
-                    style: AppStyles.styleMedium16(context).copyWith(
+                    style: TextStyle(
                       color: Theme.of(context).textTheme.bodySmall?.color,
                     ),
                     maxLines: 3,

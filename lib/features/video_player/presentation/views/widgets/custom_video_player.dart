@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:reelsvtwo/features/video_player/presentation/manger/VideosCacheManager.dart';
 import '../../manger/video_cubit/video_cubit.dart';
 import '../../../../../models/video_model.dart';
-import '../../../../../core/utils/styles.dart';
 
 class CustomVideoPlayer extends StatefulWidget {
   final String videoUrl;
@@ -171,17 +170,9 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildInfoContainer(
-                      widget.title,
-                      AppStyles.styleSemiBold24(context),
-                      2,
-                    ),
+                    _buildInfoContainer(widget.title, 2),
                     const SizedBox(height: 8),
-                    _buildInfoContainer(
-                      widget.description,
-                      AppStyles.styleMedium16(context),
-                      3,
-                    ),
+                    _buildInfoContainer(widget.description, 3),
                   ],
                 ),
               ),
@@ -225,7 +216,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     );
   }
 
-  Widget _buildInfoContainer(String text, TextStyle style, int maxLines) {
+  Widget _buildInfoContainer(String text, int maxLines) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -234,7 +225,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       ),
       child: Text(
         text,
-        style: style.copyWith(
+        style: TextStyle(
           color: Colors.white,
           shadows: [
             Shadow(
