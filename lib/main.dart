@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+
+import 'package:path_provider/path_provider.dart';
+
 import 'package:reelsvtwo/features/video_player/presentation/manger/VideosCacheManager.dart';
 import 'package:reelsvtwo/features/video_player/presentation/views/screens/home_screen.dart';
 
@@ -8,6 +11,11 @@ void main() async {
 
   // إنشاء مدير الكاش
   final cacheManager = VideosCacheManager();
+
+  // إضافة مستمع لدورة حياة التطبيق
+  WidgetsBinding.instance.addObserver(AppLifecycleObserver(cacheManager));
+
+  // إنشاء مدير الكاش
 
   // إضافة مستمع لدورة حياة التطبيق
   WidgetsBinding.instance.addObserver(AppLifecycleObserver(cacheManager));
@@ -36,7 +44,6 @@ class AppLifecycleObserver extends WidgetsBindingObserver {
 
 class MyApp extends StatelessWidget {
   final VideosCacheManager cacheManager;
-
   const MyApp({required this.cacheManager, super.key});
 
   @override

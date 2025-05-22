@@ -36,7 +36,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       keepPage: true,
       viewportFraction: 1.0,
     );
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _cacheNextVideo();
     });
@@ -49,14 +48,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
     );
-
     _pageController.dispose();
     super.dispose();
   }
 
   void _cacheNextVideo() {
     final cacheManager = VideoPlayerCacheProvider.of(context);
-
     if (_currentIndex < widget.videos.length - 1) {
       cacheManager.cacheVideo(widget.videos[_currentIndex + 1].url);
     }

@@ -143,7 +143,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
     if (_cubit == null) {
       return _buildThumbnailOnly();
     }
-
     return BlocBuilder<CustomVideoPlayerCubit, VideoState>(
       bloc: _cubit,
       builder: (context, state) {
@@ -151,7 +150,6 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
           Future.microtask(() => _loadVideo());
           return _buildThumbnailOnly();
         }
-
         if (state is VideoLoaded) {
           return Stack(
             fit: StackFit.expand,

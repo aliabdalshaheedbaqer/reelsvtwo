@@ -14,7 +14,6 @@ class VideoInitial extends VideoState {}
 class VideoLoading extends VideoState {
   final String thumbnailUrl;
   final bool isCached;
-
   VideoLoading(this.thumbnailUrl, {this.isCached = false});
 }
 
@@ -32,7 +31,6 @@ class VideoLoaded extends VideoState {
 
 class VideoError extends VideoState {
   final String message;
-
   VideoError(this.message);
 }
 
@@ -141,13 +139,11 @@ class CustomVideoPlayerCubit extends Cubit<VideoState> {
   void setAdjacentVideos(List<VideoModel> videos, int currentIndex) {
     _adjacentVideos = videos;
     _currentIndex = currentIndex;
-
     _cacheAdjacentVideos();
   }
 
   Future<void> _cacheAdjacentVideos() async {
     if (_adjacentVideos == null || _currentIndex == null) return;
-
     if (_currentIndex! < _adjacentVideos!.length - 1) {
       cacheManager.cacheVideo(_adjacentVideos![_currentIndex! + 1].url);
     }
