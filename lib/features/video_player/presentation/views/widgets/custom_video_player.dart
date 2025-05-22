@@ -160,23 +160,29 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
               Visibility(
                 visible: !_showThumbnail,
                 maintainState: true,
-                child: SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: BetterPlayer(controller: state.betterPlayerController),
+                child: SizedBox.expand(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      child: BetterPlayer(
+                        controller: state.betterPlayerController,
+                      ),
+                    ),
+                  ),
                 ),
               ),
 
               // Miniatura (se muestra durante 1 segundo o más si es necesario)
               if (_showThumbnail)
-                SizedBox(
-                  width: double.infinity,
-                  height: double.infinity,
-                  child: Image.network(
-                    widget.thumbnailUrl,
+                SizedBox.expand(
+                  child: FittedBox(
                     fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
+                    child: Image.network(
+                      widget.thumbnailUrl,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
 
@@ -261,7 +267,7 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
                     ],
                   ),
                 ),
-
+              // Listener para el cambio de estado (para ocultar miniatura cuando el video esté listo)
               BlocListener<CustomVideoPlayerCubit, VideoState>(
                 bloc: _cubit,
                 listener: (context, state) {
@@ -287,14 +293,10 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
             fit: StackFit.expand,
             children: [
               // Miniatura a pantalla completa
-              SizedBox(
-                width: double.infinity,
-                height: double.infinity,
-                child: Image.network(
-                  widget.thumbnailUrl,
+              SizedBox.expand(
+                child: FittedBox(
                   fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
+                  child: Image.network(widget.thumbnailUrl, fit: BoxFit.cover),
                 ),
               ),
 
@@ -325,15 +327,14 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
 
   // Widget que muestra solo la miniatura sin indicador de carga
   Widget _buildThumbnailOnly() {
-    return SizedBox(
-      width: double.infinity,
-      height: double.infinity,
-      child: Image.network(
-        widget.thumbnailUrl,
+    return SizedBox.expand(
+      child: FittedBox(
         fit: BoxFit.cover,
-        width: double.infinity,
-        height: double.infinity,
-        errorBuilder: (_, __, ___) => Container(color: Colors.black),
+        child: Image.network(
+          widget.thumbnailUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => Container(color: Colors.black),
+        ),
       ),
     );
   }

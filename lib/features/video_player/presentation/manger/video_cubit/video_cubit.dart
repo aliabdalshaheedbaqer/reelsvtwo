@@ -84,7 +84,8 @@ class CustomVideoPlayerCubit extends Cubit<VideoState> {
 
       _controller = BetterPlayerController(
         BetterPlayerConfiguration(
-          // Remove aspectRatio completely to let video determine its own ratio
+          // Force specific aspect ratio for mobile screens (9:16 like TikTok)
+          aspectRatio: 9 / 16,
           controlsConfiguration: const BetterPlayerControlsConfiguration(
             // Hide all controls for TikTok-like experience
             showControls: false,
@@ -110,6 +111,8 @@ class CustomVideoPlayerCubit extends Cubit<VideoState> {
           systemOverlaysAfterFullScreen: [],
           // Ensure video fills the screen properly
           expandToFill: true,
+          fullScreenAspectRatio: 9 / 16,
+          // Force resize mode for better screen filling
           playerVisibilityChangedBehavior: (visibilityFraction) {
             return visibilityFraction > 0;
           },
