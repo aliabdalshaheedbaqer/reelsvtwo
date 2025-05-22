@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:reelsvtwo/features/video_player/presentation/manger/VideosCacheManager.dart';
 import 'package:reelsvtwo/features/video_player/presentation/views/screens/home_screen.dart';
+// Import the updated HomeScreen
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +43,7 @@ class MyApp extends StatelessWidget {
       cacheManager: cacheManager,
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Video Player App',
+        title: 'Reels App',
         theme: ThemeData(
           primarySwatch: Colors.blue,
           brightness: Brightness.light,

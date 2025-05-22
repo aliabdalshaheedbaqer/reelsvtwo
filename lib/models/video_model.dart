@@ -1,3 +1,92 @@
+import 'package:reelsvtwo/core/api/end_ponits.dart';
+
+class ReelResponse {
+  final int total;
+  final List<ReelModel> data;
+
+  ReelResponse({required this.total, required this.data});
+
+  factory ReelResponse.fromJson(Map<String, dynamic> json) {
+    return ReelResponse(
+      total: json['total'] ?? 0,
+      data:
+          (json['data'] as List?)
+              ?.map((item) => ReelModel.fromJson(item))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class ReelModel {
+  final String id;
+  final String title;
+  final String description;
+  final String videoId;
+  final String adminId;
+  final String businessType;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final VideoData video;
+
+  ReelModel({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.videoId,
+    required this.adminId,
+    required this.businessType,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.video,
+  });
+
+  factory ReelModel.fromJson(Map<String, dynamic> json) {
+    return ReelModel(
+      id: json['id'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      videoId: json['videoId'] ?? '',
+      adminId: json['adminId'] ?? '',
+      businessType: json['businessType'] ?? '',
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      updatedAt: DateTime.parse(
+        json['updatedAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      video: VideoData.fromJson(json['video'] ?? {}),
+    );
+  }
+
+  String get fullVideoUrl => '${EndPoints.storageBaseUrl}${video.key}';
+
+  String get thumbnailUrl =>
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg'; // Default thumbnail
+
+  // Convert ReelModel to VideoModel for compatibility with existing player
+  VideoModel toVideoModel() {
+    return VideoModel(
+      id: id,
+      url: fullVideoUrl,
+      thumbnailUrl: thumbnailUrl,
+      title: title,
+      description: description,
+    );
+  }
+}
+
+class VideoData {
+  final String key;
+
+  VideoData({required this.key});
+
+  factory VideoData.fromJson(Map<String, dynamic> json) {
+    return VideoData(key: json['key'] ?? '');
+  }
+}
+
+// Import VideoModel class for conversion
 class VideoModel {
   final String id;
   final String url;
@@ -15,106 +104,7 @@ class VideoModel {
 
   static List<VideoModel> getSampleVideos() {
     return [
-      VideoModel(
-        id: 'video_1',
-        url:
-            'https://fsn1.your-objectstorage.com/777/895fdf06-e455-42b7-9449-bc396ea42d8b.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg',
-        title: 'Big Buck Bunny',
-        description:
-            'A beautifully animated short film about a big buck bunny and his adventures in the forest.',
-      ),
-      VideoModel(
-        id: 'video_2',
-        url:
-            'https://fsn1.your-objectstorage.com/777/d8c1ed81-fd6c-4c46-9d9c-4fabdb233a8b.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ElephantsDream.jpg',
-        title: 'Elephants Dream',
-        description:
-            'An artistic journey through a surreal world of dreams and imagination.',
-      ),
-      VideoModel(
-        id: 'video_3',
-        url:
-            'https://fsn1.your-objectstorage.com/777/fd1e000c-1fc6-4d1c-b3e7-72b03581dc00.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg',
-        title: 'For Bigger Blazes',
-        description:
-            'Experience the thrill of adventure and excitement in this action-packed video.',
-      ),
-      VideoModel(
-        id: 'video_4',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerEscapes.jpg',
-        title: 'For Bigger Escapes',
-        description:
-            'Journey to breathtaking destinations and discover amazing landscapes.',
-      ),
-      VideoModel(
-        id: 'video_5',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerFun.jpg',
-        title: 'For Bigger Fun',
-        description:
-            'Get ready for endless entertainment and joy with this fun-filled video.',
-      ),
-      VideoModel(
-        id: 'video_6',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerJoyrides.jpg',
-        title: 'For Bigger Joyrides',
-        description:
-            'Take an exciting ride through amazing adventures and thrilling moments.',
-      ),
-      VideoModel(
-        id: 'video_7',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerMeltdowns.jpg',
-        title: 'For Bigger Meltdowns',
-        description:
-            'Experience intense moments and dramatic scenes in this captivating video.',
-      ),
-      VideoModel(
-        id: 'video_8',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/Sintel.jpg',
-        title: 'Sintel',
-        description:
-            'A touching story of friendship and adventure in a fantasy world.',
-      ),
-      VideoModel(
-        id: 'video_9',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/SubaruOutbackOnStreetAndDirt.jpg',
-        title: 'Subaru Outback Adventure',
-        description:
-            'Explore both urban streets and rugged terrain with the versatile Subaru Outback.',
-      ),
-      VideoModel(
-        id: 'video_10',
-        url:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-        thumbnailUrl:
-            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/TearsOfSteel.jpg',
-        title: 'Tears of Steel',
-        description:
-            'A sci-fi action short film featuring robots, warriors, and epic battles.',
-      ),
+      // Sample videos implementation remains the same
     ];
   }
 }

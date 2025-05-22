@@ -141,7 +141,22 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
               SizedBox.expand(
                 child: FittedBox(
                   fit: BoxFit.cover,
-                  child: Image.network(widget.thumbnailUrl, fit: BoxFit.cover),
+                  child: Image.network(
+                    widget.thumbnailUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.black,
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            color: Colors.white54,
+                            size: 48,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
 
@@ -180,6 +195,32 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
             // Error State
             if (state is VideoError) _buildErrorWidget(state.message),
 
+            // Play/Pause Button
+            Positioned(
+              right: 16,
+              bottom: 140,
+              child: IconButton(
+                icon: Icon(
+                  state is VideoLoaded &&
+                          (state.betterPlayerController.isPlaying() != null &&
+                              state.betterPlayerController.isPlaying()!)
+                      ? Icons.pause_circle
+                      : Icons.play_circle,
+                  color: Colors.white,
+                  size: 40,
+                ),
+                onPressed: () {
+                  if (state is VideoLoaded) {
+                    state.betterPlayerController.isPlaying() != null &&
+                            state.betterPlayerController.isPlaying()!
+                        ? state.betterPlayerController.pause()
+                        : state.betterPlayerController.play();
+                    setState(() {});
+                  }
+                },
+              ),
+            ),
+
             // State Change Listener
             BlocListener<CustomVideoPlayerCubit, VideoState>(
               bloc: _cubit,
@@ -210,13 +251,25 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
         child: Image.network(
           widget.thumbnailUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(color: Colors.black),
+          errorBuilder:
+              (_, __, ___) => Container(
+                color: Colors.black,
+                child: const Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    color: Colors.white54,
+                    size: 48,
+                  ),
+                ),
+              ),
         ),
       ),
     );
   }
 
   Widget _buildInfoContainer(String text, int maxLines) {
+    if (text.isEmpty) return const SizedBox.shrink();
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
@@ -225,14 +278,12 @@ class _CustomVideoPlayerState extends State<CustomVideoPlayer> {
       ),
       child: Text(
         text,
-        style: TextStyle(
+        style: const TextStyle(
           color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
           shadows: [
-            Shadow(
-              offset: const Offset(1, 1),
-              blurRadius: 3,
-              color: Colors.black.withOpacity(0.8),
-            ),
+            Shadow(offset: Offset(1, 1), blurRadius: 3, color: Colors.black54),
           ],
         ),
         maxLines: maxLines,
